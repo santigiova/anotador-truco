@@ -643,6 +643,21 @@
             font-weight: 600;
         }
 
+        .search-player {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+
+        .player-chip.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+
         .history-list {
             display: flex;
             flex-direction: column;
@@ -709,21 +724,29 @@
     </div>
     <div class="selection-container">
         <div>
-            <label class="section-label">Crear Jugador</label>
+            <label class="section-label">Detalles del Partido</label>
+            <input type="text" id="match-location" placeholder="Lugar (Ej: El quincho, Club...)" class="search-player"
+                style="font-size: 1rem; padding: 12px">
+
+            <label class="section-label" style="margin-top: 15px">Crear Jugador</label>
             <div class="add-player-box">
                 <input type="text" id="new-player-name" placeholder="Nombre...">
                 <button class="btn-add" onclick="createNewPlayer()">+</button>
             </div>
         </div>
         <div>
-            <label class="section-label">Equipo N</label>
+            <label class="section-label">Equipo N (Máx 3)</label>
+            <input type="text" id="search-n" placeholder="Buscar jugador..." class="search-player"
+                oninput="renderPlayerSelection()">
             <div id="list-n" class="player-list"></div>
         </div>
         <div>
-            <label class="section-label">Equipo E</label>
+            <label class="section-label">Equipo E (Máx 3)</label>
+            <input type="text" id="search-e" placeholder="Buscar jugador..." class="search-player"
+                oninput="renderPlayerSelection()">
             <div id="list-e" class="player-list"></div>
         </div>
-        <button class="btn-start" onclick="startHistoryMatch()">Comenzar Partido</button>
+        <button class="btn-start" id="start-match-btn" onclick="startHistoryMatch()">Comenzar Partido</button>
     </div>
 </div>
 
@@ -815,6 +838,7 @@
     let scores = { N: 0, E: 0 };
     let gameOver = false;
     let isHistoryMatch = false;
+    let matchLocation = "";
     let selectedN = [];
     let selectedE = [];
     let allPlayers = [];
@@ -837,6 +861,8 @@
             isHistoryMatch = state.isHistoryMatch;
             selectedN = state.selectedN || [];
             selectedE = state.selectedE || [];
+            matchLocation = state.matchLocation || "";
+            document.getElementById('match-location').value = matchLocation;
         }
 
         if (inGame === 'true') {
@@ -860,22 +886,46 @@
     function renderPlayerSelection() {
         const listN = document.getElementById('list-n');
         const listE = document.getElementById('list-e');
+        const searchN = document.getElementById('search-n').value.toLowerCase();
+        const searchE = document.getElementById('search-e').value.toLowerCase();
+
         listN.innerHTML = '';
         listE.innerHTML = '';
 
         allPlayers.forEach(p => {
-            const chipN = createPlayerChip(p, 'N');
-            const chipE = createPlayerChip(p, 'E');
-            listN.appendChild(chipN);
-            listE.appendChild(chipE);
+            if (p.nombre.toLowerCase().includes(searchN)) {
+                const chipN = createPlayerChip(p, 'N');
+                listN.appendChild(chipN);
+            }
+            if (p.nombre.toLowerCase().includes(searchE)) {
+                const chipE = createPlayerChip(p, 'E');
+                listE.appendChild(chipE);
+            }
         });
+
+        validateMatchStart();
+    }
+
+    function validateMatchStart() {
+        const btn = document.getElementById('start-match-btn');
+        // Regla: Equipos deben ser de igual tamaño (1v1, 2v2, 3v3) y no estar vacíos
+        const isValid = selectedN.length > 0 && selectedN.length === selectedE.length;
+        btn.disabled = !isValid;
+        btn.style.opacity = isValid ? '1' : '0.5';
     }
 
     function createPlayerChip(player, team) {
         const div = document.createElement('div');
         div.className = 'player-chip';
-        if (team === 'N' && selectedN.includes(player.nombre)) div.classList.add('selected-n');
-        if (team === 'E' && selectedE.includes(player.nombre)) div.classList.add('selected-e');
+        const isSelectedN = selectedN.includes(player.nombre);
+        const isSelectedE = selectedE.includes(player.nombre);
+
+        if (team === 'N' && isSelectedN) div.classList.add('selected-n');
+        if (team === 'E' && isSelectedE) div.classList.add('selected-e');
+
+        // Disable chips that would exceed the 3 player limit or are already on the other team
+        const otherTeam = team === 'N' ? selectedE : selectedN;
+        const currentTeam = team === 'N' ? selectedN : selectedE;
 
         div.innerText = player.nombre;
         div.onclick = () => togglePlayer(player.nombre, team);
@@ -884,11 +934,23 @@
 
     function togglePlayer(name, team) {
         if (team === 'N') {
-            if (selectedN.includes(name)) selectedN = selectedN.filter(n => n !== name);
-            else selectedN.push(name);
+            if (selectedN.includes(name)) {
+                selectedN = selectedN.filter(n => n !== name);
+            } else {
+                if (selectedN.length >= 3) return; // Máximo 3
+                selectedN.push(name);
+                // Exclusión mutua: si estaba en el otro equipo, lo sacamos
+                selectedE = selectedE.filter(n => n !== name);
+            }
         } else {
-            if (selectedE.includes(name)) selectedE = selectedE.filter(n => n !== name);
-            else selectedE.push(name);
+            if (selectedE.includes(name)) {
+                selectedE = selectedE.filter(n => n !== name);
+            } else {
+                if (selectedE.length >= 3) return; // Máximo 3
+                selectedE.push(name);
+                // Exclusión mutua
+                selectedN = selectedN.filter(n => n !== name);
+            }
         }
         renderPlayerSelection();
     }
@@ -916,6 +978,11 @@
             alert('Seleccioná al menos un jugador por equipo.');
             return;
         }
+        if (selectedN.length !== selectedE.length) {
+            alert('Los equipos deben tener la misma cantidad de jugadores (Ej: 2 vs 2).');
+            return;
+        }
+        matchLocation = document.getElementById('match-location').value.trim();
         isHistoryMatch = true;
         newGame(true);
     }
@@ -931,11 +998,12 @@
         if (!error && data) {
             data.forEach(m => {
                 const date = new Date(m.fecha).toLocaleDateString();
+                const place = m.lugar ? `📍 ${m.lugar}` : '';
                 const item = document.createElement('div');
                 item.className = 'history-item';
                 item.innerHTML = `
-                    <div>
-                        <div class="date">${date}</div>
+                    <div style="flex:1">
+                        <div class="date">${date} ${place}</div>
                         <div class="teams">${m.equipo_n_jugadores.join(', ')} vs ${m.equipo_e_jugadores.join(', ')}</div>
                     </div>
                     <div class="score">${m.puntos_n} - ${m.puntos_e}</div>
@@ -997,7 +1065,7 @@
     function save() {
         localStorage.setItem('truco-scores', JSON.stringify(scores));
         localStorage.setItem('truco-match-state', JSON.stringify({
-            isHistoryMatch, selectedN, selectedE
+            isHistoryMatch, selectedN, selectedE, matchLocation
         }));
     }
 
@@ -1058,7 +1126,8 @@
             equipo_e_jugadores: selectedE,
             puntos_n: scores.N,
             puntos_e: scores.E,
-            ganador: winner
+            ganador: winner,
+            lugar: matchLocation
         }]);
 
         if (error) {
