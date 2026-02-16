@@ -1285,10 +1285,15 @@
 
     function showWinner(team) {
         gameOver = true;
-        document.getElementById('winner-text').innerText = `Ganó ${team}`;
+        document.getElementById('winner-text').innerText = `Ganó ${team === 'N' ? 'EQUIPO N' : 'EQUIPO E'}`;
         document.getElementById('banner').style.display = 'flex';
 
         const saveBtn = document.getElementById('save-match-btn');
+        // Resetear estado del botón para cada nueva victoria
+        saveBtn.disabled = false;
+        saveBtn.innerText = "Guardar en Historial";
+        saveBtn.classList.remove('saved');
+
         if (isHistoryMatch) {
             saveBtn.style.display = 'block';
         } else {
