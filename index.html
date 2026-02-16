@@ -643,6 +643,80 @@
             font-weight: 600;
         }
 
+        /* Login & User UI */
+        #user-profile {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 50px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        #user-profile img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        #user-profile span {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .btn-logout {
+            background: none;
+            border: none;
+            color: #ff4500;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding-left: 10px;
+            border-left: 1px solid #eee;
+        }
+
+        .login-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            padding: 30px;
+            border-radius: 25px;
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .btn-google {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 15px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
         .search-player {
             width: 100%;
             padding: 8px 12px;
@@ -709,11 +783,30 @@
     <h1>Anotador de truco</h1>
     <p>Envido y Truco</p>
     <div class="btn-menu-group">
-        <button class="btn-start" onclick="openPlayerSelection()">Iniciar Partido (Con historial)</button>
+        <button class="btn-start" onclick="checkAuthForHistory()">Iniciar Partido (Con historial)</button>
         <button class="btn-start secondary" onclick="newGame(false)">Partida Rápida</button>
         <button class="btn-start secondary" id="continue-btn" onclick="startGame(true)">Continuar Partido</button>
         <button class="btn-start" style="background:#f0f0f0; color:#222; box-shadow:none; margin-top:10px"
             onclick="openHistory()">Historial</button>
+    </div>
+
+    <div id="user-profile">
+        <img id="user-avatar" src="" alt="avatar">
+        <span id="user-name"></span>
+        <button class="btn-logout" onclick="signOut()">Salir</button>
+    </div>
+</div>
+
+<div id="login-overlay" class="login-overlay">
+    <div class="login-card">
+        <h3>Acceso Requerido</h3>
+        <p style="color: #666; margin-top: 10px">Iniciá sesión con Google para registrar partidos y mantener el
+            historial.</p>
+        <button class="btn-google" onclick="signInWithGoogle()">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
+            Continuar con Google
+        </button>
+        <button class="btn-back" style="margin-top: 20px; width: 100%" onclick="closeLogin()">Quizás luego</button>
     </div>
 </div>
 
@@ -842,9 +935,21 @@
     let selectedN = [];
     let selectedE = [];
     let allPlayers = [];
+    let currentUser = null;
 
     // Init
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Escuchar cambios de sesión
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            currentUser = session?.user || null;
+            updateUserUI();
+        });
+
+        // Verificar sesión inicial
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        currentUser = session?.user || null;
+        updateUserUI();
+
         const saved = localStorage.getItem('truco-scores');
         const inGame = localStorage.getItem('truco-playing');
         const savedMatchState = localStorage.getItem('truco-match-state');
@@ -874,6 +979,45 @@
         render();
         loadAllPlayers();
     });
+
+    function updateUserUI() {
+        const profile = document.getElementById('user-profile');
+        if (currentUser) {
+            document.getElementById('user-name').innerText = currentUser.user_metadata.full_name.split(' ')[0];
+            document.getElementById('user-avatar').src = currentUser.user_metadata.avatar_url;
+            profile.style.display = 'flex';
+        } else {
+            profile.style.display = 'none';
+        }
+    }
+
+    async function signInWithGoogle() {
+        const { error } = await supabaseClient.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: window.location.origin
+            }
+        });
+        if (error) alert("Error al iniciar sesión: " + error.message);
+    }
+
+    async function signOut() {
+        await supabaseClient.auth.signOut();
+    }
+
+    function checkAuthForHistory() {
+        if (!currentUser) {
+            document.getElementById('login-overlay').style.display = 'flex';
+        } else {
+            openPlayerSelection();
+        }
+    }
+    window.checkAuthForHistory = checkAuthForHistory;
+
+    function closeLogin() {
+        document.getElementById('login-overlay').style.display = 'none';
+    }
+    window.closeLogin = closeLogin;
 
     async function loadAllPlayers() {
         const { data, error } = await supabaseClient.from('jugadores').select('*').order('nombre');
@@ -1131,7 +1275,8 @@
             puntos_n: scores.N,
             puntos_e: scores.E,
             ganador: winner,
-            lugar: matchLocation
+            lugar: matchLocation,
+            creado_por: currentUser ? currentUser.email : null
         }]);
 
         if (error) {
