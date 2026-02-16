@@ -40,12 +40,16 @@
 
         /* Header / Reset */
         header {
-            height: 50px;
+            height: auto;
+            min-height: 60px;
+            padding: 0 20px;
+            padding-top: env(safe-area-inset-top, 10px);
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--line-color);
-            position: relative;
+            background-color: white;
+            z-index: 10;
         }
 
         #reset-btn {
@@ -91,9 +95,9 @@
         }
 
         .team-name {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: 200;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             color: #222;
         }
 
@@ -101,7 +105,7 @@
             font-size: 0.65rem;
             letter-spacing: 0.1em;
             color: #999;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             text-transform: uppercase;
         }
 
@@ -286,9 +290,9 @@
         .controls {
             display: flex;
             height: auto;
-            min-height: 80px;
+            min-height: 90px;
             padding: 10px 20px;
-            padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+            padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
             justify-content: space-around;
             align-items: center;
             border-top: 1px solid var(--line-color);
@@ -394,7 +398,7 @@
             font-size: 1.8rem;
             font-weight: 700;
             color: #000;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
         /* Menu Screen */
@@ -484,16 +488,7 @@
             flex-direction: column;
         }
 
-        /* Navbar update */
-        header {
-            height: 60px;
-            padding: 0 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--line-color);
-            background-color: white;
-        }
+        /* Navbar removed duplicate */
 
         #home-btn {
             background: #eee;
