@@ -735,13 +735,13 @@
             </div>
         </div>
         <div>
-            <label class="section-label">Equipo N (Máx 3)</label>
+            <label class="section-label">N (Máx 3)</label>
             <input type="text" id="search-n" placeholder="Buscar jugador..." class="search-player"
                 oninput="renderPlayerSelection()">
             <div id="list-n" class="player-list"></div>
         </div>
         <div>
-            <label class="section-label">Equipo E (Máx 3)</label>
+            <label class="section-label">E (Máx 3)</label>
             <input type="text" id="search-e" placeholder="Buscar jugador..." class="search-player"
                 oninput="renderPlayerSelection()">
             <div id="list-e" class="player-list"></div>
@@ -886,18 +886,22 @@
     function renderPlayerSelection() {
         const listN = document.getElementById('list-n');
         const listE = document.getElementById('list-e');
-        const searchN = document.getElementById('search-n').value.toLowerCase();
-        const searchE = document.getElementById('search-e').value.toLowerCase();
+
+        const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+        const searchN = normalize(document.getElementById('search-n').value);
+        const searchE = normalize(document.getElementById('search-e').value);
 
         listN.innerHTML = '';
         listE.innerHTML = '';
 
         allPlayers.forEach(p => {
-            if (p.nombre.toLowerCase().includes(searchN)) {
+            const pName = normalize(p.nombre);
+            if (pName.includes(searchN)) {
                 const chipN = createPlayerChip(p, 'N');
                 listN.appendChild(chipN);
             }
-            if (p.nombre.toLowerCase().includes(searchE)) {
+            if (pName.includes(searchE)) {
                 const chipE = createPlayerChip(p, 'E');
                 listE.appendChild(chipE);
             }
