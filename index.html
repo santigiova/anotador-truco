@@ -538,6 +538,9 @@
             color: #222;
             border: 2px solid #222;
             box-shadow: none;
+        }
+
+        #continue-btn {
             display: none;
         }
 
@@ -947,6 +950,14 @@
             if (!confirm('Esto reiniciará el marcador. ¿Continuar?')) return;
         }
         isHistoryMatch = isH || false;
+
+        // Clear selection if it's a quick match
+        if (!isHistoryMatch) {
+            selectedN = [];
+            selectedE = [];
+            renderPlayerSelection();
+        }
+
         scores = { N: 0, E: 0 };
         gameOver = false;
         document.getElementById('banner').style.display = 'none';
