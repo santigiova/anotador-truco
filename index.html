@@ -1298,6 +1298,44 @@
 
             alert('¡Partida guardada!');
             document.getElementById('save-match-btn').style.display = 'none';
+
+            // Enviar notificación por mail
+            notificarPartido(winner);
+        }
+    }
+
+    async function notificarPartido(winner) {
+        // 1. Recolectar emails de los jugadores involucrados
+        const todosLosJugadores = [...selectedN, ...selectedE];
+        const emailsParaNotificar = allPlayers
+            .filter(p => todosLosJugadores.includes(p.nombre) && p.email)
+            .map(p => p.email);
+
+        if (emailsParaNotificar.length === 0) {
+            console.log("No hay emails registrados para estos jugadores.");
+            return;
+        }
+
+        console.log("Enviando reporte a:", emailsParaNotificar);
+
+        // 2. Llamar a la Edge Function de Supabase (Debes crearla en el dashboard)
+        // Usamos una llamada al azar o un servicio como Resend via Edge Functions
+        const { data, error } = await supabaseClient.functions.invoke('send-match-email', {
+            body: {
+                location: matchLocation || 'Sede no especificada',
+                teamN: selectedN,
+                teamE: selectedE,
+                scoreN: scores.N,
+                scoreE: scores.E,
+                winner: winner === 'N' ? 'Equipo N' : 'Equipo E',
+                recipients: emailsParaNotificar
+            }
+        });
+
+        if (error) {
+            console.error("Error al disparar el mail:", error);
+        } else {
+            console.log("Notificaciones enviadas con éxito");
         }
     }
 
