@@ -1363,26 +1363,39 @@
         // 2. Preparar el contenido del mail
         const subject = `Resultado Truco: ${selectedN.join(', ')} vs ${selectedE.join(', ')}`;
         const html = `
-            <div style="font-family: sans-serif; padding: 20px; color: #333; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 15px;">
-                <h1 style="color: #111827; text-align: center;">¡Partido Registrado!</h1>
-                <p style="text-align: center; color: #666;">Se ha guardado un nuevo partido en el historial.</p>
-                <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin: 20px 0;">
-                    <p style="margin: 0; font-size: 0.9rem; color: #999; text-align: center;">📍 <strong>${matchLocation || 'Sede no especificada'}</strong></p>
-                    <div style="display: flex; align-items: center; margin-top: 20px;">
-                        <div style="flex: 1; text-align: center;">
-                            <p style="margin: 0; font-size: 0.8rem; color: #999;">EQUIPO N</p>
-                            <h2 style="margin: 5px 0; font-size: 2.5rem; color: #111827;">${scores.N}</h2>
-                            <p style="font-size: 0.85rem;">${selectedN.join(', ')}</p>
-                        </div>
-                        <div style="padding: 0 20px; font-weight: bold; color: #ddd;">VS</div>
-                        <div style="flex: 1; text-align: center;">
-                            <p style="margin: 0; font-size: 0.8rem; color: #999;">EQUIPO E</p>
-                            <h2 style="margin: 5px 0; font-size: 2.5rem; color: #111827;">${scores.E}</h2>
-                            <p style="font-size: 0.85rem;">${selectedE.join(', ')}</p>
-                        </div>
-                    </div>
+            <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 20px; background-color: #ffffff;">
+                <h1 style="color: #111827; text-align: center; font-size: 24px; margin-bottom: 5px;">¡Partido Registrado!</h1>
+                <p style="text-align: center; color: #6b7280; font-size: 16px; margin-bottom: 30px;">Se ha guardado un nuevo partido en el historial.</p>
+                
+                <div style="background-color: #f9fafb; padding: 30px; border-radius: 20px; margin-bottom: 25px;">
+                    <p style="margin: 0 0 25px 0; font-size: 14px; color: #9ca3af; text-align: center; font-weight: 500;">
+                        📍 ${matchLocation || 'Sede no especificada'}
+                    </p>
+                    
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                            <td width="42%" align="center" valign="top">
+                                <p style="margin: 0; font-size: 12px; color: #9ca3af; font-weight: bold; letter-spacing: 1px;">EQUIPO N</p>
+                                <h2 style="margin: 10px 0; font-size: 48px; color: #111827; line-height: 1;">${scores.N}</h2>
+                                <p style="margin: 5px 0 0 0; font-size: 14px; color: #4b5563; line-height: 1.4;">${selectedN.join('<br>')}</p>
+                            </td>
+                            <td width="16%" align="center" valign="middle">
+                                <div style="font-size: 14px; font-weight: bold; color: #d1d5db; padding-top: 20px;">VS</div>
+                            </td>
+                            <td width="42%" align="center" valign="top">
+                                <p style="margin: 0; font-size: 12px; color: #9ca3af; font-weight: bold; letter-spacing: 1px;">EQUIPO E</p>
+                                <h2 style="margin: 10px 0; font-size: 48px; color: #111827; line-height: 1;">${scores.E}</h2>
+                                <p style="margin: 5px 0 0 0; font-size: 14px; color: #4b5563; line-height: 1.4;">${selectedE.join('<br>')}</p>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
-                <p style="text-align: center; font-size: 1.1rem;">🏆 Ganador: <strong>${winner === 'N' ? 'EQUIPO N' : 'EQUIPO E'}</strong></p>
+                
+                <div style="text-align: center; padding: 15px; background-color: #ecfdf5; border-radius: 12px; border: 1px solid #d1fae5;">
+                    <p style="margin: 0; font-size: 18px; color: #065f46; font-weight: 600;">
+                        🏆 Ganador: ${winner === 'N' ? 'EQUIPO N' : 'EQUIPO E'}
+                    </p>
+                </div>
             </div>
         `;
 
