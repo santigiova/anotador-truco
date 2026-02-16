@@ -1269,6 +1269,11 @@
 
     async function saveMatchToSupabase() {
         const winner = scores.N >= 30 ? 'N' : 'E';
+
+        // Forzamos obtener el usuario de la sesión actual antes de guardar
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        const userEmail = user ? user.email : null;
+
         const { error } = await supabaseClient.from('partidos').insert([{
             equipo_n_jugadores: selectedN,
             equipo_e_jugadores: selectedE,
@@ -1276,7 +1281,7 @@
             puntos_e: scores.E,
             ganador: winner,
             lugar: matchLocation,
-            creado_por: currentUser ? currentUser.email : null
+            creado_por: userEmail
         }]);
 
         if (error) {
