@@ -1316,27 +1316,43 @@
             return;
         }
 
-        console.log("Enviando reporte a:", emailsParaNotificar);
+        // 2. Preparar el contenido del mail
+        const subject = `Resultado Truco: ${selectedN.join(', ')} vs ${selectedE.join(', ')}`;
+        const html = `
+            <div style="font-family: sans-serif; padding: 20px; color: #333; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 15px;">
+                <h1 style="color: #111827; text-align: center;">¡Partido Registrado!</h1>
+                <p style="text-align: center; color: #666;">Se ha guardado un nuevo partido en el historial.</p>
+                <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin: 20px 0;">
+                    <p style="margin: 0; font-size: 0.9rem; color: #999; text-align: center;">📍 <strong>${matchLocation || 'Sede no especificada'}</strong></p>
+                    <div style="display: flex; align-items: center; margin-top: 20px;">
+                        <div style="flex: 1; text-align: center;">
+                            <p style="margin: 0; font-size: 0.8rem; color: #999;">EQUIPO N</p>
+                            <h2 style="margin: 5px 0; font-size: 2.5rem; color: #111827;">${scores.N}</h2>
+                            <p style="font-size: 0.85rem;">${selectedN.join(', ')}</p>
+                        </div>
+                        <div style="padding: 0 20px; font-weight: bold; color: #ddd;">VS</div>
+                        <div style="flex: 1; text-align: center;">
+                            <p style="margin: 0; font-size: 0.8rem; color: #999;">EQUIPO E</p>
+                            <h2 style="margin: 5px 0; font-size: 2.5rem; color: #111827;">${scores.E}</h2>
+                            <p style="font-size: 0.85rem;">${selectedE.join(', ')}</p>
+                        </div>
+                    </div>
+                </div>
+                <p style="text-align: center; font-size: 1.1rem;">🏆 Ganador: <strong>${winner === 'N' ? 'EQUIPO N' : 'EQUIPO E'}</strong></p>
+                <div style="margin-top: 40px; font-size: 0.75rem; color: #bbb; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
+                    Enviado automáticamente por Anotador de Truco App.
+                </div>
+            </div>
+        `;
 
-        // 2. Llamar a la Edge Function de Supabase (Debes crearla en el dashboard)
-        // Usamos una llamada al azar o un servicio como Resend via Edge Functions
-        const { data, error } = await supabaseClient.functions.invoke('send-match-email', {
+        // 3. Llamar a la Edge Function
+        await supabaseClient.functions.invoke('send-match-email', {
             body: {
-                location: matchLocation || 'Sede no especificada',
-                teamN: selectedN,
-                teamE: selectedE,
-                scoreN: scores.N,
-                scoreE: scores.E,
-                winner: winner === 'N' ? 'Equipo N' : 'Equipo E',
-                recipients: emailsParaNotificar
+                to: emailsParaNotificar,
+                subject: subject,
+                html: html
             }
         });
-
-        if (error) {
-            console.error("Error al disparar el mail:", error);
-        } else {
-            console.log("Notificaciones enviadas con éxito");
-        }
     }
 
     function closeWinnerBanner() {
