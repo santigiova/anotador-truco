@@ -31,6 +31,7 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             height: 100vh;
+            height: 100dvh;
             width: 100vw;
             overflow: hidden;
             display: flex;
@@ -90,9 +91,9 @@
         }
 
         .team-name {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 200;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             color: #222;
         }
 
@@ -284,8 +285,10 @@
         /* Controls */
         .controls {
             display: flex;
-            height: 100px;
-            padding: 0 20px;
+            height: auto;
+            min-height: 80px;
+            padding: 10px 20px;
+            padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
             justify-content: space-around;
             align-items: center;
             border-top: 1px solid var(--line-color);
@@ -391,12 +394,13 @@
             font-size: 1.8rem;
             font-weight: 700;
             color: #000;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         /* Menu Screen */
         #menu-screen {
             height: 100vh;
+            height: 100dvh;
             width: 100vw;
             display: flex;
             flex-direction: column;
@@ -476,6 +480,7 @@
         #game-screen {
             display: none;
             height: 100vh;
+            height: 100dvh;
             flex-direction: column;
         }
 
