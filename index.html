@@ -417,6 +417,14 @@
             border-radius: 10px;
             font-size: 0.9rem;
             color: #666;
+            width: 100%;
+        }
+
+        .btn-save-history.saved {
+            background-color: #10b981 !important;
+            /* Green-500 */
+            color: white !important;
+            cursor: default;
         }
 
         /* Score Footer Hint */
@@ -917,9 +925,13 @@
     <div class="banner-content">
         <h2>Partida finalizada</h2>
         <p id="winner-text"></p>
-        <button id="save-match-btn" class="btn-save-history" onclick="saveMatchToSupabase()">Guardar en
+        <button id="save-match-btn" class="btn-save-history" onclick="saveMatchToSupabase()" style="width: 100%">Guardar
+            en
             Historial</button>
-        <button class="banner-close" onclick="closeWinnerBanner()">Cerrar / Corregir</button>
+        <button class="banner-close" onclick="closeWinnerBanner()">Volver / Corregir</button>
+        <button class="banner-close" onclick="goToMainMenu()"
+            style="background: transparent; color: #888; border: 1px solid #eee; margin-top: 10px">Volver al Menu
+            Principal</button>
     </div>
 </div>
 
@@ -1107,13 +1119,30 @@
         const name = document.getElementById('new-player-name').value.trim();
         if (!name) return;
 
-        const { error } = await supabaseClient.from('jugadores').insert([{ nombre: name }]);
+        // Intentamos obtener el email del creador si está logueado
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        const userEmail = user ? user.email : null;
+
+        const { error } = await supabaseClient.from('jugadores').insert([{
+            nombre: name,
+            creado_por: userEmail
+        }]);
         if (error) {
             alert('Error al crear jugador (posiblemente ya existe)');
         } else {
             document.getElementById('new-player-name').value = '';
             loadAllPlayers();
         }
+    }
+
+    function goToMainMenu() {
+        scores = { N: 0, E: 0 };
+        gameOver = false;
+        localStorage.removeItem('truco-scores');
+        localStorage.removeItem('truco-playing');
+        localStorage.removeItem('truco-match-state');
+        closeWinnerBanner();
+        showMenu();
     }
 
     function openPlayerSelection() {
@@ -1268,6 +1297,12 @@
     }
 
     async function saveMatchToSupabase() {
+        const btn = document.getElementById('save-match-btn');
+        if (btn.disabled) return;
+
+        btn.disabled = true;
+        btn.innerText = "Guardando...";
+
         const winner = scores.N >= 30 ? 'N' : 'E';
 
         // Forzamos obtener el usuario de la sesión actual antes de guardar
@@ -1285,8 +1320,14 @@
         }]);
 
         if (error) {
-            alert('Error al guardar partida');
+            console.error("Error al guardar:", error);
+            btn.disabled = false;
+            btn.innerText = "Error al Guardar";
+            setTimeout(() => { btn.innerText = "Guardar en Historial"; }, 3000);
         } else {
+            btn.innerText = "Partida Guardada";
+            btn.classList.add('saved');
+
             // Actualizar estadísticas usando RPC
             const winners = winner === 'N' ? selectedN : selectedE;
             const losers = winner === 'N' ? selectedE : selectedN;
@@ -1296,10 +1337,7 @@
                 p_perdedores: losers
             });
 
-            alert('¡Partida guardada!');
-            document.getElementById('save-match-btn').style.display = 'none';
-
-            // Enviar notificación por mail
+            // Notificar por mail (ya no mostramos alert)
             notificarPartido(winner);
         }
     }
