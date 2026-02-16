@@ -1349,8 +1349,8 @@
         `;
 
         // 3. Llamar a la Edge Function
-        console.log("🚀 Llamando a la Edge Function 'send-match-email'...");
-        const { data, error } = await supabaseClient.functions.invoke('send-match-email', {
+        console.log("🚀 Llamando a la Edge Function 'brevo-email'...");
+        const { data, error } = await supabaseClient.functions.invoke('brevo-email', {
             body: {
                 to: emailsParaNotificar,
                 subject: subject,
