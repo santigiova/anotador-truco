@@ -1305,16 +1305,22 @@
     }
 
     async function notificarPartido(winner) {
+        console.log("Iniciando proceso de notificación...");
+
         // 1. Recolectar emails de los jugadores involucrados
         const todosLosJugadores = [...selectedN, ...selectedE];
+        console.log("Jugadores en este partido:", todosLosJugadores);
+
         const emailsParaNotificar = allPlayers
             .filter(p => todosLosJugadores.includes(p.nombre) && p.email)
             .map(p => p.email);
 
         if (emailsParaNotificar.length === 0) {
-            console.log("No hay emails registrados para estos jugadores.");
+            console.warn("⚠️ Abortando mail: Ninguno de los jugadores seleccionados tiene un email registrado en la tabla 'jugadores'.");
             return;
         }
+
+        console.log("📧 Emails encontrados para notificar:", emailsParaNotificar);
 
         // 2. Preparar el contenido del mail
         const subject = `Resultado Truco: ${selectedN.join(', ')} vs ${selectedE.join(', ')}`;
@@ -1339,20 +1345,24 @@
                     </div>
                 </div>
                 <p style="text-align: center; font-size: 1.1rem;">🏆 Ganador: <strong>${winner === 'N' ? 'EQUIPO N' : 'EQUIPO E'}</strong></p>
-                <div style="margin-top: 40px; font-size: 0.75rem; color: #bbb; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
-                    Enviado automáticamente por Anotador de Truco App.
-                </div>
             </div>
         `;
 
         // 3. Llamar a la Edge Function
-        await supabaseClient.functions.invoke('send-match-email', {
+        console.log("🚀 Llamando a la Edge Function 'send-match-email'...");
+        const { data, error } = await supabaseClient.functions.invoke('send-match-email', {
             body: {
                 to: emailsParaNotificar,
                 subject: subject,
                 html: html
             }
         });
+
+        if (error) {
+            console.error("❌ Error de Supabase al invocar la función:", error);
+        } else {
+            console.log("✅ Respuesta de la Edge Function:", data);
+        }
     }
 
     function closeWinnerBanner() {
